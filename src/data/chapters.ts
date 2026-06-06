@@ -2,6 +2,8 @@ export interface Section {
   number: string
   text1646: string
   text1788: string
+  num1646?: string
+  num1788?: string
 }
 
 export interface Chapter {
@@ -577,29 +579,37 @@ export const chapters: Chapter[] = [
       },
       {
         number: "2",
+        num1646: "2",
+        num1788: "",
         text1646: ch31s2_1646,
+        text1788: "",
+      },
+      {
+        number: "3",
+        num1646: "3",
+        num1788: "2",
+        text1646:
+          "It belongs to synods and councils, ministerially to determine controversies of faith and cases of conscience; to set down rules and directions for the better ordering of the public worship of God, and government of his Church; to receive complaints in cases of maladministration, and authoritatively to determine the same: which decrees and determinations, if consonant to the Word of God, are to be received with reverence and submission; not only for their agreement with the Word, but also for the power whereby they are made, as being an ordinance of God appointed thereunto in His Word.",
         text1788:
           "It belongeth to synods and councils, ministerially to determine controversies of faith, and cases of conscience; to set down rules and directions for the better ordering of the public worship of God, and government of his church; to receive complaints in cases of maladministration, and authoritatively to determine the same: which decrees and determinations, if consonant to the Word of God, are to be received with reverence and submission; not only for their agreement with the Word, but also for the power whereby they are made, as being an ordinance of God appointed thereunto in his Word.",
       },
       {
-        number: "3",
-        text1646:
-          "It belongs to synods and councils, ministerially to determine controversies of faith and cases of conscience; to set down rules and directions for the better ordering of the public worship of God, and government of his Church; to receive complaints in cases of maladministration, and authoritatively to determine the same: which decrees and determinations, if consonant to the Word of God, are to be received with reverence and submission; not only for their agreement with the Word, but also for the power whereby they are made, as being an ordinance of God appointed thereunto in His Word.",
-        text1788:
-          "All synods or councils, since the Apostles' times, whether general or particular, may err; and many have erred. Therefore they are not to be made the rule of faith, or practice; but to be used as a help in both.",
-      },
-      {
         number: "4",
+        num1646: "4",
+        num1788: "3",
         text1646:
           "All synods or councils, since the Apostles' times, whether general or particular, may err; and many have erred. Therefore they are not to be made the rule of faith, or practice; but to be used as a help in both.",
         text1788:
-          "Synods and councils are to handle, or conclude nothing, but that which is ecclesiastical: and are not to intermeddle with civil affairs which concern the commonwealth, unless by way of humble petition in cases extraordinary; or, by way of advice, for satisfaction of conscience, if they be thereunto required by the civil magistrate.",
+          "All synods or councils, since the Apostles' times, whether general or particular, may err; and many have erred. Therefore they are not to be made the rule of faith, or practice; but to be used as a help in both.",
       },
       {
         number: "5",
+        num1646: "5",
+        num1788: "4",
         text1646:
           "Synods and councils are to handle, or conclude, nothing, but that which is ecclesiastical: and are not to intermeddle with civil affairs which concern the commonwealth; unless by way of humble petition, in cases extraordinary; or by way of advice, for satisfaction of conscience, if they be thereunto required by the civil magistrate.",
-        text1788: "",
+        text1788:
+          "Synods and councils are to handle, or conclude nothing, but that which is ecclesiastical: and are not to intermeddle with civil affairs which concern the commonwealth, unless by way of humble petition in cases extraordinary; or, by way of advice, for satisfaction of conscience, if they be thereunto required by the civil magistrate.",
       },
     ],
   },
