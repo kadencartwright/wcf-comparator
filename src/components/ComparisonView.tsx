@@ -5,6 +5,7 @@ type Token = {
 	id: string;
 	leftText?: string;
 	rightText?: string;
+	category?: "spelling";
 	type: "same" | "removed" | "added";
 };
 type ThemeVars = CSSProperties & Record<`--${string}`, string>;
@@ -32,11 +33,14 @@ const spell: Record<string, string> = {
 	endeavour: "endeavor",
 	endeavoured: "endeavored",
 	endeavouring: "endeavoring",
+	worshiping: "worshiped",
 	worshipping: "worshiped",
 	worshipped: "worshiped",
 	fulness: "fullness",
 	skilful: "skillful",
 	favourable: "favorable",
+	beside: "besides",
+	grace: "graces",
 	testament: "testaments",
 	i: "1",
 	ii: "2",
@@ -129,7 +133,96 @@ function wordDiff(a: string, b: string): Token[] {
 			i--;
 		}
 	}
-	return result.reverse();
+	return categorizeDiffs(result.reverse());
+}
+
+function bareToken(token: string | undefined): string {
+	return token?.toLowerCase().replace(/[^a-z0-9]/g, "") ?? "";
+}
+
+const compoundSpellings = [
+	{ parts: ["any", "thing"], compound: "anything" },
+	{ parts: ["evil", "doers"], compound: "evildoers" },
+];
+
+function markSpelling(tokens: Token[], start: number, length: number) {
+	for (let offset = 0; offset < length; offset++) {
+		tokens[start + offset] = {
+			...tokens[start + offset],
+			category: "spelling",
+		};
+	}
+}
+
+function matchesCompoundSpelling(tokens: Token[], index: number): boolean {
+	const first = tokens[index];
+	const second = tokens[index + 1];
+	const third = tokens[index + 2];
+
+	return compoundSpellings.some(({ parts, compound }) => {
+		const firstLeft = bareToken(first.leftText);
+		const firstRight = bareToken(first.rightText);
+		const secondLeft = bareToken(second.leftText);
+		const secondRight = bareToken(second.rightText);
+		const thirdLeft = bareToken(third.leftText);
+		const thirdRight = bareToken(third.rightText);
+
+		return (
+			(first.type === "removed" &&
+				second.type === "removed" &&
+				third.type === "added" &&
+				firstLeft === parts[0] &&
+				secondLeft === parts[1] &&
+				thirdRight === compound) ||
+			(first.type === "added" &&
+				second.type === "removed" &&
+				third.type === "removed" &&
+				firstRight === compound &&
+				secondLeft === parts[0] &&
+				thirdLeft === parts[1]) ||
+			(first.type === "removed" &&
+				second.type === "added" &&
+				third.type === "added" &&
+				firstLeft === compound &&
+				secondRight === parts[0] &&
+				thirdRight === parts[1]) ||
+			(first.type === "added" &&
+				second.type === "added" &&
+				third.type === "removed" &&
+				firstRight === parts[0] &&
+				secondRight === parts[1] &&
+				thirdLeft === compound)
+		);
+	});
+}
+
+function categorizeDiffs(tokens: Token[]): Token[] {
+	const categorized = tokens.map((token, index) => {
+		if (
+			token.type === "removed" &&
+			bareToken(token.leftText) === "of" &&
+			bareToken(tokens[index + 1]?.leftText) === "john"
+		) {
+			return { ...token, category: "spelling" };
+		}
+
+		if (
+			token.type === "removed" &&
+			bareToken(token.leftText) === "john" &&
+			bareToken(tokens[index - 1]?.leftText) === "of"
+		) {
+			return { ...token, category: "spelling" };
+		}
+
+		return token;
+	});
+
+	for (let index = 0; index < categorized.length - 2; index++) {
+		if (matchesCompoundSpelling(categorized, index))
+			markSpelling(categorized, index, 3);
+	}
+
+	return categorized;
 }
 
 function chapterText(ch: Chapter, version: "1646" | "1788"): string {
@@ -214,6 +307,18 @@ function sameTokenClass(
 	return undefined;
 }
 
+function tokenHasHighlight(
+	token: Token,
+	showPunct: boolean,
+	showSpelling: boolean,
+): boolean {
+	if (token.type === "same") {
+		return Boolean(sameTokenClass(token, "left", showPunct, showSpelling));
+	}
+
+	return token.category !== "spelling" || showSpelling;
+}
+
 function DiffLine({
 	tokens,
 	side,
@@ -240,14 +345,28 @@ function DiffLine({
 				}
 				if (side === "left" && t.type === "removed") {
 					return (
-						<span key={t.id} className={removedClass}>
+						<span
+							key={t.id}
+							className={
+								t.category === "spelling" && !showSpelling
+									? undefined
+									: removedClass
+							}
+						>
 							{t.leftText}
 						</span>
 					);
 				}
 				if (side === "right" && t.type === "added") {
 					return (
-						<span key={t.id} className={addedClass}>
+						<span
+							key={t.id}
+							className={
+								t.category === "spelling" && !showSpelling
+									? undefined
+									: addedClass
+							}
+						>
 							{t.rightText}
 						</span>
 					);
@@ -280,9 +399,8 @@ function ChapterDiff({
 	const leftTokens = diff;
 	const rightTokens = diff;
 
-	const hasHighlightedChanges = diff.some(
-		(t) =>
-			t.type !== "same" || sameTokenClass(t, "left", showPunct, showSpelling),
+	const hasHighlightedChanges = diff.some((t) =>
+		tokenHasHighlight(t, showPunct, showSpelling),
 	);
 
 	return (
@@ -350,9 +468,8 @@ function TocItem({
 		() => wordDiff(leftText, rightText),
 		[leftText, rightText],
 	);
-	const hasHighlightedChanges = diff.some(
-		(t) =>
-			t.type !== "same" || sameTokenClass(t, "left", showPunct, showSpelling),
+	const hasHighlightedChanges = diff.some((t) =>
+		tokenHasHighlight(t, showPunct, showSpelling),
 	);
 
 	return (
@@ -458,8 +575,7 @@ export default function ComparisonView() {
 						Westminster Confession of Faith
 					</h1>
 					<p className="mb-3 text-sm italic text-[var(--muted)]">
-						1646 original &middot; 1788 American revision &mdash; word-level
-						diff
+						1646 original &middot; 1788 American revision
 					</p>
 					<div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[var(--muted)]">
 						<span className="flex items-center gap-1.5">
