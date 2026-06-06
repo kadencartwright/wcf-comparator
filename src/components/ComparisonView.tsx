@@ -2,6 +2,7 @@ import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { type Chapter, chapters } from "../data/chapters";
 
 type Token = {
+	id: string;
 	leftText?: string;
 	rightText?: string;
 	type: "same" | "removed" | "added";
@@ -104,14 +105,27 @@ function wordDiff(a: string, b: string): Token[] {
 	let j = n;
 	while (i > 0 || j > 0) {
 		if (i > 0 && j > 0 && match(i - 1, j - 1)) {
-			result.push({ leftText: wa[i - 1], rightText: wb[j - 1], type: "same" });
+			result.push({
+				id: `same-${i - 1}-${j - 1}`,
+				leftText: wa[i - 1],
+				rightText: wb[j - 1],
+				type: "same",
+			});
 			i--;
 			j--;
 		} else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-			result.push({ rightText: wb[j - 1], type: "added" });
+			result.push({
+				id: `added-${j - 1}`,
+				rightText: wb[j - 1],
+				type: "added",
+			});
 			j--;
 		} else {
-			result.push({ leftText: wa[i - 1], type: "removed" });
+			result.push({
+				id: `removed-${i - 1}`,
+				leftText: wa[i - 1],
+				type: "removed",
+			});
 			i--;
 		}
 	}
@@ -213,11 +227,11 @@ function DiffLine({
 }) {
 	return (
 		<p className="whitespace-pre-wrap break-words">
-			{tokens.map((t, i) => {
+			{tokens.map((t) => {
 				if (t.type === "same") {
 					return (
 						<span
-							key={i}
+							key={t.id}
 							className={sameTokenClass(t, side, showPunct, showSpelling)}
 						>
 							{side === "left" ? t.leftText : t.rightText}
@@ -226,14 +240,14 @@ function DiffLine({
 				}
 				if (side === "left" && t.type === "removed") {
 					return (
-						<span key={i} className={removedClass}>
+						<span key={t.id} className={removedClass}>
 							{t.leftText}
 						</span>
 					);
 				}
 				if (side === "right" && t.type === "added") {
 					return (
-						<span key={i} className={addedClass}>
+						<span key={t.id} className={addedClass}>
 							{t.rightText}
 						</span>
 					);
@@ -426,14 +440,16 @@ export default function ComparisonView() {
 								<svg
 									className="size-4"
 									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="1.8"
-									strokeLinecap="round"
-									strokeLinejoin="round"
+									fill="currentColor"
 									aria-hidden="true"
 								>
-									<path d="M20.7 15.4A8.5 8.5 0 0 1 8.6 3.3 8.5 8.5 0 1 0 20.7 15.4Z" />
+									<defs>
+										<mask id="moon-mask">
+											<rect width="24" height="24" fill="white" />
+											<circle cx="15" cy="9" r="8" fill="black" />
+										</mask>
+									</defs>
+									<circle cx="12" cy="12" r="8" mask="url(#moon-mask)" />
 								</svg>
 							)}
 						</button>
@@ -511,6 +527,33 @@ export default function ComparisonView() {
 						Texts from the Westminster Assembly (1646) and the Presbyterian
 						Church in the USA (1788). Proof texts omitted for brevity.
 					</p>
+					<div className="mt-3 flex items-center justify-center gap-4">
+						<a
+							className="inline-flex items-center gap-1.5 hover:text-[var(--accent)]"
+							href="https://github.com/kadencartwright/wcf-comparator"
+							target="_blank"
+							rel="noreferrer"
+							aria-label="View source on GitHub"
+						>
+							<svg
+								className="size-4"
+								viewBox="0 0 24 24"
+								fill="currentColor"
+								aria-hidden="true"
+							>
+								<path d="M12 2C6.48 2 2 6.58 2 12.23c0 4.52 2.87 8.35 6.84 9.71.5.09.68-.22.68-.49v-1.9c-2.78.62-3.37-1.22-3.37-1.22-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.57 2.34 1.12 2.91.86.09-.67.35-1.12.63-1.38-2.22-.26-4.55-1.14-4.55-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.36 9.36 0 0 1 12 6.92c.85 0 1.7.12 2.5.35 1.9-1.33 2.74-1.05 2.74-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.59.69.49A10.04 10.04 0 0 0 22 12.23C22 6.58 17.52 2 12 2Z" />
+							</svg>
+							<span>GitHub</span>
+						</a>
+						<a
+							className="hover:text-[var(--accent)]"
+							href="https://github.com/kadencartwright/wcf-comparator/issues"
+							target="_blank"
+							rel="noreferrer"
+						>
+							Report a bug
+						</a>
+					</div>
 				</footer>
 
 				<div className="fixed bottom-4 right-4 flex overflow-hidden rounded border border-[var(--border)] bg-[var(--card)] text-[var(--muted)] shadow-sm">
